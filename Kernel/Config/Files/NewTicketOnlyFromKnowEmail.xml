@@ -1,0 +1,54 @@
+<?xml version="1.0" ?>
+<otrs_config version="1.0" init="Config">
+    <ConfigItem Name="PostMaster::PreFilterModule###4-NewTicketOnlyFromKnowEmail" Required="0" Valid="1">
+        <Description Translatable="1">Blocks all the incoming emails that do not have a correspondent email registered as customer on our system.</Description>
+        <Group>Ticket</Group>
+        <SubGroup>Core::PostMaster</SubGroup>
+        <Setting>
+            <Hash>
+                <Item Key="Module">Kernel::System::PostMaster::Filter::NewTicketOnlyFromKnowEmail</Item>
+                <Item Key="StopAfterMatch">1</Item>
+                <Item Key="Set">
+                    <Hash>
+                        <Item Key="X-OTRS-Queue">Junk</Item>
+                        <Item Key="X-OTRS-Ignore">no</Item>
+                    </Hash>
+                </Item>
+            </Hash>
+        </Setting>
+    </ConfigItem>
+    <ConfigItem Name="PostMaster::PreFilterModule::NewTicketOnlyFromKnowEmail::Sender" Required="0" Valid="0">
+        <Description Translatable="1">Defines the sender for rejected emails.</Description>
+        <Group>Ticket</Group>
+        <SubGroup>Core::PostMaster</SubGroup>
+        <Setting>
+            <String Regex="">noreply@example.com</String>
+        </Setting>
+    </ConfigItem>
+    <ConfigItem Name="PostMaster::PreFilterModule::NewTicketOnlyFromKnowEmail::Subject" Required="1" Valid="1">
+        <Description Translatable="1">Defines the subject for rejected emails.</Description>
+        <Group>Ticket</Group>
+        <SubGroup>Core::PostMaster</SubGroup>
+        <Setting>
+            <String Regex="">Email Rejected</String>
+        </Setting>
+    </ConfigItem>
+    <ConfigItem Name="PostMaster::PreFilterModule::NewTicketOnlyFromKnowEmail::Body" Required="1" Valid="1">
+        <Description Translatable="1">Defines the body text for rejected emails.</Description>
+        <Group>Ticket</Group>
+        <SubGroup>Core::PostMaster</SubGroup>
+        <Setting>
+            <TextArea>
+Dear Customer,
+
+Unfortunately we could not detect your email on our system, so this email can't be processed.
+
+Please create a new ticket via the customer panel.
+
+Thanks for your help!
+
+ Your Helpdesk Team
+</TextArea>
+        </Setting>
+    </ConfigItem>
+</otrs_config>
