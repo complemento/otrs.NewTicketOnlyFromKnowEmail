@@ -11,12 +11,14 @@ package Kernel::System::PostMaster::Filter::NewTicketOnlyFromKnowEmail;
 use strict;
 use warnings;
 
-use Kernel::System::Ticket;
-use Kernel::System::Email;
-use Kernel::System::CustomerUser;
-
-use vars qw($VERSION);
-$VERSION = qw($Revision: 1.17 $) [1];
+our @ObjectDependencies = (
+    'Kernel::Config',
+    'Kernel::System::Email',   
+    'Kernel::System::EmailParser',   
+    'Kernel::System::Log',
+    'Kernel::System::CustomerUser',
+    'Kernel::System::Ticket',
+);
 
 sub new {
     my ( $Type, %Param ) = @_;
@@ -24,16 +26,11 @@ sub new {
     # allocate new hash for object
     my $Self = {};
     bless( $Self, $Type );
+	
+	# get parser object
+    $Self->{ParserObject} = $Param{ParserObject} || die "Got no ParserObject!";
 
     $Self->{Debug} = $Param{Debug} || 0;
-
-    # get needed objects
-    for (qw(ConfigObject LogObject DBObject MainObject ParserObject)) {
-        $Self->{$_} = $Param{$_} || die "Got no $_!";
-    }
-    $Self->{CustomerUserObject} = Kernel::System::CustomerUser->new(%Param);
-    $Self->{TicketObject} = Kernel::System::Ticket->new(%Param);
-    $Self->{EmailObject}  = Kernel::System::Email->new(%Param);
 
     return $Self;
 }
@@ -44,11 +41,14 @@ sub Run {
     # check needed stuff
     for (qw(JobConfig GetParam)) {
         if ( !$Param{$_} ) {
-            $Self->{LogObject}->Log( Priority => 'error', Message => "Need $_!" );
+             $Kernel::OM->Get('Kernel::System::Log')->Log(
+                Priority => 'error',
+                Message  => "Need $_!"
+            );
             return;
         }
     }
-
+	
     # get config options
     my %Config;
     my %Match;
@@ -59,23 +59,23 @@ sub Run {
             %Match = %{ $Config{Match} };
         }
         if ( $Config{Set} ) {
-            %Set = %{ $Config{Set} };
+            %Set = %{ $Config{Set} };			
         }
-    }
-    
+    }    
+	
     # get sender email
     my @EmailAddresses = $Self->{ParserObject}->SplitAddressLine( Line => $Param{GetParam}->{From}, );
-
+	
     for (@EmailAddresses) {
         $Param{GetParam}->{SenderEmailAddress} = $Self->{ParserObject}->GetEmailAddress( Email => $_, );
     }
 
-    my %List = $Self->{CustomerUserObject}->CustomerSearch(
+    my %List = $Kernel::OM->Get('Kernel::System::CustomerUser')->CustomerSearch(
         PostMasterSearch => lc( $Param{GetParam}->{SenderEmailAddress} ),
     );
     my %CustomerData;
     for ( keys %List ) {
-        %CustomerData = $Self->{CustomerUserObject}->CustomerUserDataGet(
+        %CustomerData = $Kernel::OM->Get('Kernel::System::CustomerUser')->CustomerUserDataGet(
             User => $_,
         );
     }
@@ -83,55 +83,40 @@ sub Run {
     # if there is no customer id found!
     if ( !$CustomerData{UserLogin} ) {
 	# RETURN IF NO CUSTOMER ID
-	$Self->{LogObject}->Log( Priority => 'info', Message => "$_ not in database ". $Param{GetParam}->{SenderEmailAddress} );
-#    # match 'Match => ???' stuff
-#    my $Matched    = '';
-#    my $MatchedNot = 0;
-#    for ( sort keys %Match ) {
-#        if ( $Param{GetParam}->{$_} && $Param{GetParam}->{$_} =~ /$Match{$_}/i ) {
-#            $Matched = $1 || '1';
-#            if ( $Self->{Debug} > 1 ) {
-#                $Self->{LogObject}->Log(
-#                    Priority => 'debug',
-#                    Message  => "'$Param{GetParam}->{$_}' =~ /$Match{$_}/i matched!",
-#                );
-#            }
-#        }
-#        else {
-#            $MatchedNot = 1;
-#            if ( $Self->{Debug} > 1 ) {
-#                $Self->{LogObject}->Log(
-#                    Priority => 'debug',
-#                    Message  => "'$Param{GetParam}->{$_}' =~ /$Match{$_}/i matched NOT!",
-#                );
-#            }
-#        }
-#    }
+	$Kernel::OM->Get('Kernel::System::Log')->Log( Priority => 'info', Message => "$_ not in database ". $Param{GetParam}->{SenderEmailAddress} );
+
+		# get ticket object
+        my $TicketObject = $Kernel::OM->Get('Kernel::System::Ticket');		
+		
         # check if new ticket
-        my $Tn = $Self->{TicketObject}->GetTNByString( $Param{GetParam}->{Subject} );
-        return 1 if $Tn && $Self->{TicketObject}->TicketCheckNumber( Tn => $Tn );
+        my $Tn = $TicketObject->GetTNByString( $Param{GetParam}->{Subject} );
+		
+        return 1 if $Tn && $TicketObject->TicketCheckNumber( Tn => $Tn );
 
         # set attributes if ticket is created
         for ( keys %Set ) {
             $Param{GetParam}->{$_} = $Set{$_};
-            $Self->{LogObject}->Log(
+            $Kernel::OM->Get('Kernel::System::Log')->Log(
                 Priority => 'notice',
                 Message =>
                     "Set param '$_' to '$Set{$_}' (Message-ID: $Param{GetParam}->{'Message-ID'}) ",
             );
         }
+		
+		 # get config object
+        my $ConfigObject = $Kernel::OM->Get('Kernel::Config');
 
         # send bounce mail
-        my $Subject = $Self->{ConfigObject}->Get(
+        my $Subject = $ConfigObject->Get(
             'PostMaster::PreFilterModule::NewTicketOnlyFromKnowEmail::Subject'
         );
-        my $Body = $Self->{ConfigObject}->Get(
+        my $Body = $ConfigObject->Get(
             'PostMaster::PreFilterModule::NewTicketOnlyFromKnowEmail::Body'
         );
-        my $Sender = $Self->{ConfigObject}->Get(
+        my $Sender = $ConfigObject->Get(
             'PostMaster::PreFilterModule::NewTicketOnlyFromKnowEmail::Sender'
         ) || '';
-        $Self->{EmailObject}->Send(
+        $Kernel::OM->Get('Kernel::System::Email')->Send(
             From       => $Sender,
             To         => $Param{GetParam}->{From},
             Subject    => $Subject,
@@ -147,7 +132,7 @@ sub Run {
                 }
             ],
         );
-        $Self->{LogObject}->Log(
+        $Kernel::OM->Get('Kernel::System::Log')->Log(
             Priority => 'notice',
             Message  => "Send reject mail to '$Param{GetParam}->{From}'!",
         );
