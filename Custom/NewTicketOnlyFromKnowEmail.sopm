@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <otrs_package version="1.0">
     <Name>NewTicketOnlyFromKnowEmail</Name>
-    <Version>5.0.0</Version>
-    <Vendor>Complemento Inc</Vendor>
+    <Version>5.0.1</Version>
+    <Vendor>Complemento [Free]</Vendor>
     <URL>http://www.complemento.net.br/</URL>
-    <URL>http://github.com/richieri/NewTicketOnlyFromKnowEmail/</URL>
     <License>GNU AFFERO GENERAL PUBLIC LICENSE Version 3, November 2007</License>
-	<ChangeLog Version="5.0.0" Date="2016-12-26 15:09:00">Módulo atualizado para a versão 5 pela BeOnUp</ChangeLog>
+    <ChangeLog Version="5.0.1" Date="2017-04-24 11:48:00">Módulo atualizado para a versão 5.0.1 pela Complemento. Adicionado arquivo SOPM no pacote para facilitar elaboração dos mesmos.</ChangeLog>
+    <ChangeLog Version="5.0.0" Date="2016-12-26 15:09:00">Módulo atualizado para a versão 5 pela BeOnUp</ChangeLog>
     <Description Lang="en">This package allows you to block the creation of new tickets from incoming postmaster messages of email address not registered on OTRS as customers</Description>
     <Description Lang="pt_BR">Este pacote permite a você bloquear a criação de novos tickets a partir de mensagens vindas de emails não cadastrados como clientes do OTRS</Description>
     <Framework>5.0.x</Framework>
@@ -14,6 +14,7 @@
     <IntroInstall Lang="pt_BR" Title="Tutorial" Type="pre">Por favor, teste antes de colocar em produção</IntroInstall>    
     <Filelist>
         <File Location="Kernel/Config/Files/NewTicketOnlyFromKnowEmail.xml" Permission="644" />
+        <File Location="Custom/NewTicketOnlyFromKnowEmail.sopm" Permission="644" />
         <File Location="Kernel/System/PostMaster/Filter/NewTicketOnlyFromKnowEmail.pm" Permission="644" />
         <File Location="doc/NewTicketOnlyFromKnowEmail.pdf" Permission="644" />
     </Filelist>
