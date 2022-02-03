@@ -9,7 +9,7 @@
     <ChangeLog Version="5.0.0" Date="2016-12-26 15:09:00">Módulo atualizado para a versão 5 pela BeOnUp</ChangeLog>
     <Description Lang="en">This package allows you to block the creation of new tickets from incoming postmaster messages of email address not registered on OTRS as customers</Description>
     <Description Lang="pt_BR">Este pacote permite a você bloquear a criação de novos tickets a partir de mensagens vindas de emails não cadastrados como clientes do OTRS</Description>
-    <Framework>6.0.x</Framework>
+    <Framework>6.x.x</Framework>
     <IntroInstall Lang="en" Title="Tutorial" Type="pre">Please, test it before putting in production.</IntroInstall>
     <IntroInstall Lang="pt_BR" Title="Tutorial" Type="pre">Por favor, teste antes de colocar em produção</IntroInstall>    
     <Filelist>
